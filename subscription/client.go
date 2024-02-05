@@ -21,6 +21,7 @@ type client struct {
 
 func NewClient(subscription string, conn *websocket.Conn) Client {
 	return &client{
+		updates:      make(chan models.Message, 100),
 		subscription: subscription,
 		Connection:   conn,
 	}
@@ -39,6 +40,12 @@ func (c *client) Listen(service Service) {
 		var update models.Message
 		if err := c.Connection.ReadJSON(&update); err != nil {
 			log.Println("error while reading message from client", err)
+			c.Connection.Close()
+			break
+		}
+		if update.ChatId != c.subscription {
+			c.Connection.WriteMessage(websocket.TextMessage, []byte("Invalid Chat ID"))
+			continue
 		}
 		service.SendToServer() <- update
 	}

@@ -2,6 +2,8 @@ package subscription
 
 import (
 	"context"
+	"fmt"
+	"github.com/emersion/go-vcard"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/types"
@@ -59,8 +61,14 @@ func (s *server) Listen(service Service) {
 				}
 
 				//log.Println("Message received with ID:", m.Info.ID)
+				if !service.HasSubscribers(m.Info.Chat.String()) {
+					log.Println("No subscribers for this chat: ", m.Info.Chat.String())
+					return
+				} else {
+					//log.Println("Sending message to clients: ", m.Info.Chat.String())
+				}
 
-				update := models.Message{ChatId: m.Info.Chat.String(), Sender: m.Info.PushName}
+				update := models.Message{ChatId: m.Info.Chat.String(), Sender: m.Info.PushName, Participant: m.Info.Sender.String()}
 				mess := m.Message
 
 				file, err := []byte{}, error(nil)
@@ -68,32 +76,49 @@ func (s *server) Listen(service Service) {
 				// nothing just download the file and assign to respective field of update
 				switch {
 				case mess.Conversation != nil:
+					log.Println("conversation")
+					update.Text = new(string)
+					*update.Text = mess.GetConversation() + mess.GetExtendedTextMessage().GetText()
 				case mess.GetExtendedTextMessage().GetText() != "":
-					text := mess.GetConversation() + mess.GetExtendedTextMessage().GetText()
-					update.Text = &text
+					log.Println("extended text")
+					update.Text = new(string)
+					*update.Text = mess.GetConversation() + mess.GetExtendedTextMessage().GetText()
 				case mess.ImageMessage != nil:
+					log.Println("image message")
 					file, err = s.conn.Download(mess.ImageMessage)
 					update.Caption = mess.ImageMessage.Caption
 					update.Image = file
 				case mess.VideoMessage != nil:
+					log.Println("video message")
 					file, err = s.conn.Download(mess.VideoMessage)
 					update.Caption = mess.VideoMessage.Caption
 					update.Video = file
 				case mess.DocumentMessage != nil:
+					log.Println("document message")
 					file, err = s.conn.Download(mess.DocumentMessage)
 					update.Caption = mess.DocumentMessage.Caption
 					update.Document = file
 				case mess.AudioMessage != nil:
+					log.Println("audio message")
 					file, err = s.conn.Download(mess.AudioMessage)
 					update.Audio = file
 				case mess.StickerMessage != nil:
+					log.Println("sticker message")
 					file, err = s.conn.Download(mess.StickerMessage)
 					update.Sticker = file
+				case mess.ContactMessage != nil:
+					log.Println("Contact message: ", mess.ContactMessage)
+					if mess.ContactMessage.Vcard != nil {
+						dec, _ := vcard.NewDecoder(strings.NewReader(*mess.ContactMessage.Vcard)).Decode()
+						fmt.Println("Contact message: ", dec)
+					}
 				}
 				if err != nil {
+					fmt.Println("error while downloading file: ", err)
 					return
 				}
 
+				//fmt.Println("Update created: ", update)
 				service.SendToClients() <- update
 			}(m)
 		}
@@ -112,12 +137,19 @@ func (s *server) Serve() {
 
 		msg := new(proto.Message)
 
-		text := mess.Sender + ": "
+		text := "*" + mess.Sender + "*: "
 		var resp whatsmeow.UploadResponse
 		var err error
 
+		var participant *string
+		if mess.Participant != "" {
+			participant = gproto.String(mess.Participant)
+		} else {
+			participant = gproto.String("0@s.whatsapp.net")
+		}
+
 		contextInfo := &proto.ContextInfo{
-			Participant:   gproto.String("0@s.whatsapp.net"),
+			Participant:   participant,
 			QuotedMessage: &proto.Message{Conversation: gproto.String(mess.Sender)},
 		}
 
@@ -132,20 +164,25 @@ func (s *server) Serve() {
 		case mess.Text != nil:
 			text += *mess.Text
 			msg.Conversation = &text
-		case mess.Image != nil:
+
+		case mess.Image != nil && len(mess.Image) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Image, whatsmeow.MediaImage)
 			msg.ImageMessage = &proto.ImageMessage{
-				Url:           &resp.URL,
-				Mimetype:      gproto.String(http.DetectContentType(mess.Image)),
-				Caption:       gproto.String(caption),
-				FileSha256:    resp.FileSHA256,
-				FileLength:    &resp.FileLength,
-				MediaKey:      resp.MediaKey,
-				FileEncSha256: resp.FileEncSHA256,
-				DirectPath:    &resp.DirectPath,
-				ContextInfo:   contextInfo,
+				Url:                 &resp.URL,
+				Mimetype:            gproto.String(http.DetectContentType(mess.Image)),
+				Caption:             gproto.String(caption),
+				FileSha256:          resp.FileSHA256,
+				FileLength:          &resp.FileLength,
+				MediaKey:            resp.MediaKey,
+				FileEncSha256:       resp.FileEncSHA256,
+				DirectPath:          &resp.DirectPath,
+				ContextInfo:         contextInfo,
+				JpegThumbnail:       mess.Image,
+				ThumbnailDirectPath: &resp.DirectPath,
+				ThumbnailEncSha256:  resp.FileEncSHA256,
+				ThumbnailSha256:     resp.FileEncSHA256,
 			}
-		case mess.Video != nil:
+		case mess.Video != nil && len(mess.Video) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Image, whatsmeow.MediaVideo)
 			msg.VideoMessage = &proto.VideoMessage{
 				Url:           &resp.URL,
@@ -158,8 +195,8 @@ func (s *server) Serve() {
 				DirectPath:    &resp.DirectPath,
 				ContextInfo:   contextInfo,
 			}
-		case mess.Audio != nil:
-			resp, err = s.conn.Upload(context.Background(), mess.Image, whatsmeow.MediaAudio)
+		case mess.Audio != nil && len(mess.Audio) > 0:
+			resp, err = s.conn.Upload(context.Background(), mess.Audio, whatsmeow.MediaAudio)
 			msg.AudioMessage = &proto.AudioMessage{
 				Url:           &resp.URL,
 				Mimetype:      gproto.String(http.DetectContentType(mess.Audio)),
@@ -170,8 +207,8 @@ func (s *server) Serve() {
 				DirectPath:    &resp.DirectPath,
 				ContextInfo:   contextInfo,
 			}
-		case mess.Document != nil:
-			resp, err = s.conn.Upload(context.Background(), mess.Image, whatsmeow.MediaDocument)
+		case mess.Document != nil && len(mess.Document) > 0:
+			resp, err = s.conn.Upload(context.Background(), mess.Document, whatsmeow.MediaDocument)
 			msg.DocumentMessage = &proto.DocumentMessage{
 				Url:           &resp.URL,
 				Mimetype:      gproto.String(http.DetectContentType(mess.Document)),
@@ -184,7 +221,7 @@ func (s *server) Serve() {
 				DirectPath:    &resp.DirectPath,
 				ContextInfo:   contextInfo,
 			}
-		case mess.Sticker != nil:
+		case mess.Sticker != nil && len(mess.Sticker) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Sticker, whatsmeow.MediaImage)
 			msg.StickerMessage = &proto.StickerMessage{
 				Url:           &resp.URL,
@@ -206,6 +243,10 @@ func (s *server) Serve() {
 		}
 
 		rsp, err := s.conn.SendMessage(context.Background(), jid, msg)
+		if err != nil {
+			log.Println("Error while sending message: ", err)
+			continue
+		}
 		log.Println("Message sent with ID:", rsp.ID)
 	}
 }

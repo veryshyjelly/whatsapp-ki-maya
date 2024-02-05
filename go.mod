@@ -3,6 +3,7 @@ module whatsapp-ki-maya
 go 1.21.6
 
 require (
+	github.com/emersion/go-vcard v0.0.0-20230815062825-8fda7d206ec9
 	github.com/fatih/color v1.16.0
 	github.com/gofiber/fiber/v2 v2.52.0
 	github.com/gofiber/websocket/v2 v2.2.1

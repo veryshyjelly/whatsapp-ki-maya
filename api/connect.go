@@ -35,6 +35,7 @@ func Connect(service subscription.Service) fiber.Handler {
 		log.Println("client connected to subscription:", sub)
 
 		client := subscription.NewClient(sub, conn)
+		service.Subscribe() <- client
 		go client.Listen(service)
 		client.Serve()
 	})

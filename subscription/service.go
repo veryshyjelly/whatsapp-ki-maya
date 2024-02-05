@@ -8,6 +8,7 @@ import (
 type Service interface {
 	SetServer(server Server)
 	Run()
+	HasSubscribers(sub string) bool
 	SendToServer() chan models.Message
 	SendToClients() chan models.Message
 	Subscribe() chan Client
@@ -51,6 +52,14 @@ func (s *service) SendToServer() chan models.Message {
 func (s *service) SendToClients() chan models.Message {
 	// we need to handle the message using the updater function which will be listening to this channel
 	return s.updates
+}
+
+func (s *service) HasSubscribers(sub string) bool {
+	_, ok := s.Subscribers[sub]
+	if !ok {
+		return false
+	}
+	return true
 }
 
 // Subscribe is used to subscribe clients to particular chat
