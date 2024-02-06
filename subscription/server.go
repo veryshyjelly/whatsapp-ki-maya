@@ -97,6 +97,7 @@ func (s *server) Listen(service Service) {
 					log.Println("document message")
 					file, err = s.conn.Download(mess.DocumentMessage)
 					update.Caption = mess.DocumentMessage.Caption
+					update.Filename = mess.DocumentMessage.FileName
 					update.Document = file
 				case mess.AudioMessage != nil:
 					log.Println("audio message")

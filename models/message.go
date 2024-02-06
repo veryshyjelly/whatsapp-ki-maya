@@ -10,6 +10,7 @@ type Message struct {
 	Audio       []byte  `json:"audio,omitempty"`
 	Document    []byte  `json:"document,omitempty"`
 	Sticker     []byte  `json:"sticker,omitempty"`
+	Filename    *string `json:"filename,omitempty"`
 	Caption     *string `json:"caption,omitempty"`
 }
 
