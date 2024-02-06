@@ -53,8 +53,8 @@ func (c *client) Listen(service Service) {
 
 func (c *client) Serve() {
 	/*This function writes the updates to the client connection*/
-	for {
-		u := <-c.updates
+	for u := range c.updates {
+
 		if err := c.Connection.WriteJSON(u); err != nil {
 			log.Println("[ERROR] error occurred writing update to client", err)
 			break

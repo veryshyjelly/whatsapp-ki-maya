@@ -127,8 +127,7 @@ func (s *server) Listen(service Service) {
 
 // Serve methods sends the message to the server
 func (s *server) Serve() {
-	for {
-		mess := <-s.updates
+	for mess := range s.updates {
 		var us = strings.Split(mess.ChatId, "@")
 		jid := types.JID{
 			User:   us[0],
@@ -154,9 +153,8 @@ func (s *server) Serve() {
 		}
 
 		var caption string
-
 		if mess.Caption != nil {
-			caption = *mess.Caption
+			caption = mess.Sender + ": " + *mess.Caption
 		}
 
 		// nothing just uploading the file to the server and assigning the response to respective field of message
@@ -167,16 +165,19 @@ func (s *server) Serve() {
 
 		case mess.Image != nil && len(mess.Image) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Image, whatsmeow.MediaImage)
+			if caption == "" {
+				caption = mess.Sender + " sent an image"
+			}
 			msg.ImageMessage = &proto.ImageMessage{
-				Url:                 &resp.URL,
-				Mimetype:            gproto.String(http.DetectContentType(mess.Image)),
-				Caption:             gproto.String(caption),
-				FileSha256:          resp.FileSHA256,
-				FileLength:          &resp.FileLength,
-				MediaKey:            resp.MediaKey,
-				FileEncSha256:       resp.FileEncSHA256,
-				DirectPath:          &resp.DirectPath,
-				ContextInfo:         contextInfo,
+				Url:           &resp.URL,
+				Mimetype:      gproto.String(http.DetectContentType(mess.Image)),
+				Caption:       gproto.String(caption),
+				FileSha256:    resp.FileSHA256,
+				FileLength:    &resp.FileLength,
+				MediaKey:      resp.MediaKey,
+				FileEncSha256: resp.FileEncSHA256,
+				DirectPath:    &resp.DirectPath,
+				//ContextInfo:         contextInfo,
 				JpegThumbnail:       mess.Image,
 				ThumbnailDirectPath: &resp.DirectPath,
 				ThumbnailEncSha256:  resp.FileEncSHA256,
@@ -184,6 +185,9 @@ func (s *server) Serve() {
 			}
 		case mess.Video != nil && len(mess.Video) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Image, whatsmeow.MediaVideo)
+			if caption == "" {
+				caption = mess.Sender + " sent a video"
+			}
 			msg.VideoMessage = &proto.VideoMessage{
 				Url:           &resp.URL,
 				Mimetype:      gproto.String(http.DetectContentType(mess.Video)),
@@ -193,7 +197,7 @@ func (s *server) Serve() {
 				MediaKey:      resp.MediaKey,
 				FileEncSha256: resp.FileEncSHA256,
 				DirectPath:    &resp.DirectPath,
-				ContextInfo:   contextInfo,
+				//ContextInfo:   contextInfo,
 			}
 		case mess.Audio != nil && len(mess.Audio) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Audio, whatsmeow.MediaAudio)
@@ -209,6 +213,9 @@ func (s *server) Serve() {
 			}
 		case mess.Document != nil && len(mess.Document) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Document, whatsmeow.MediaDocument)
+			if caption == "" {
+				caption = mess.Sender + " sent a document"
+			}
 			msg.DocumentMessage = &proto.DocumentMessage{
 				Url:           &resp.URL,
 				Mimetype:      gproto.String(http.DetectContentType(mess.Document)),
@@ -219,7 +226,7 @@ func (s *server) Serve() {
 				MediaKey:      resp.MediaKey,
 				FileEncSha256: resp.FileEncSHA256,
 				DirectPath:    &resp.DirectPath,
-				ContextInfo:   contextInfo,
+				//ContextInfo:   contextInfo,
 			}
 		case mess.Sticker != nil && len(mess.Sticker) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Sticker, whatsmeow.MediaImage)
@@ -234,8 +241,7 @@ func (s *server) Serve() {
 				ContextInfo:   contextInfo,
 			}
 		case mess.Caption != nil:
-			text += *mess.Caption
-			mess.Caption = &text
+			msg.Conversation = gproto.String(*mess.Caption)
 		}
 		if err != nil {
 			log.Println("Error while creating message: ", err)

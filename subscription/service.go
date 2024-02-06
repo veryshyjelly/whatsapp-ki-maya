@@ -82,8 +82,7 @@ func (s *service) Run() {
 
 // subscriber is a method which runs as goroutine to handle the subscription requests in the channel
 func (s *service) subscriber() {
-	for {
-		c := <-s.subscribe
+	for c := range s.subscribe {
 		if s.Subscribers[c.Subscription()] == nil {
 			s.Subscribers[c.Subscription()] = make(map[Client]bool)
 		}
@@ -94,8 +93,7 @@ func (s *service) subscriber() {
 
 // unSubscriber is same as subscriber just does the opposite of that
 func (s *service) unSubscriber() {
-	for {
-		c := <-s.unsubscribe
+	for c := range s.unsubscribe {
 		delete(s.Subscribers[c.Subscription()], c)
 		s.mutex.Unlock()
 	}
@@ -104,8 +102,7 @@ func (s *service) unSubscriber() {
 // updater is a go routine which handles the updates which comes to the subscription service
 // it sends this update to all the subscribed clients
 func (s *service) updater() {
-	for {
-		u := <-s.updates
+	for u := range s.updates {
 		for c := range s.Subscribers[u.GetChatId()] {
 			c.Update() <- u
 		}
