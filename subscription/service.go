@@ -1,6 +1,7 @@
 package subscription
 
 import (
+	"log"
 	"sync"
 	"whatsapp-ki-maya/models"
 )
@@ -78,6 +79,7 @@ func (s *service) Run() {
 	go s.subscriber()
 	go s.unSubscriber()
 	go s.updater()
+	log.Println("SUBSCRIPTION SERVICE STARTED")
 }
 
 // subscriber is a method which runs as goroutine to handle the subscription requests in the channel
