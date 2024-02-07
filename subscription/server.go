@@ -78,7 +78,6 @@ func (s *server) Listen(service Service) {
 				mess := m.Message
 
 				file, err := []byte{}, error(nil)
-
 				// nothing just download the file and assign to respective field of update
 				switch {
 				case mess.Conversation != nil:
@@ -122,6 +121,11 @@ func (s *server) Listen(service Service) {
 				default:
 					return
 				}
+
+				if mess.ExtendedTextMessage.ContextInfo.QuotedMessage != nil {
+					update.QuotedText = gproto.String(mess.ExtendedTextMessage.ContextInfo.QuotedMessage.GetConversation())
+				}
+
 				if err != nil {
 					fmt.Println("error while downloading file: ", err)
 					return
