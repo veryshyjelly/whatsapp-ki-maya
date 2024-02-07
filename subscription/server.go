@@ -162,6 +162,8 @@ func (s *server) Serve() {
 		}
 		if mess.QuotedText != nil {
 			contextInfo.QuotedMessage = &proto.Message{Conversation: gproto.String(*mess.QuotedText)}
+		} else if mess.Sticker == nil {
+			contextInfo = nil
 		}
 
 		var caption string
