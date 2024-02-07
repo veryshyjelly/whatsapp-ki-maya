@@ -5,6 +5,7 @@ type Message struct {
 	Sender      string  `json:"sender"`
 	Participant string  `json:"participant,omitempty"`
 	Text        *string `json:"text,omitempty"`
+	QuotedText  *string `json:"quoted_text,omitempty"`
 	Image       []byte  `json:"photo,omitempty"`
 	Video       []byte  `json:"video,omitempty"`
 	Audio       []byte  `json:"audio,omitempty"`

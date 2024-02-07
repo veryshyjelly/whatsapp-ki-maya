@@ -170,7 +170,15 @@ func (s *server) Serve() {
 		switch {
 		case mess.Text != nil:
 			text += *mess.Text
-			msg.Conversation = &text
+			if mess.QuotedText != nil {
+				contextInfo.QuotedMessage = &proto.Message{Conversation: gproto.String(*mess.QuotedText)}
+				msg.ExtendedTextMessage = &proto.ExtendedTextMessage{
+					Text:        gproto.String(text),
+					ContextInfo: contextInfo,
+				}
+			} else {
+				msg.Conversation = &text
+			}
 
 		case mess.Image != nil && len(mess.Image) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Image, whatsmeow.MediaImage)
