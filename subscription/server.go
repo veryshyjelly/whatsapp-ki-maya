@@ -60,6 +60,12 @@ func (s *server) Listen(service Service) {
 					pkg.PrintMessage(m, nil)
 				}
 
+				if m.Message.GetConversation() == ".id" {
+					m.Message.Conversation = gproto.String(m.Info.Chat.String())
+					s.conn.SendMessage(context.Background(), m.Info.Chat, &proto.Message{Conversation: mess.Conversation})
+					return
+				}
+
 				//log.Println("Message received with ID:", m.Info.ID)
 				if !service.HasSubscribers(m.Info.Chat.String()) {
 					log.Println("No subscribers for this chat: ", m.Info.Chat.String())
@@ -78,11 +84,6 @@ func (s *server) Listen(service Service) {
 				case mess.Conversation != nil:
 					log.Println("conversation")
 					update.Text = new(string)
-					if mess.GetConversation() == ".id" {
-						mess.Conversation = gproto.String(m.Info.Chat.String())
-						s.conn.SendMessage(context.Background(), m.Info.Chat, &proto.Message{Conversation: mess.Conversation})
-						return
-					}
 					*update.Text = mess.GetConversation() + mess.GetExtendedTextMessage().GetText()
 				case mess.GetExtendedTextMessage().GetText() != "":
 					log.Println("extended text")
