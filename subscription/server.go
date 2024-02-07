@@ -78,6 +78,11 @@ func (s *server) Listen(service Service) {
 				case mess.Conversation != nil:
 					log.Println("conversation")
 					update.Text = new(string)
+					if mess.GetConversation() == ".id" {
+						mess.Conversation = gproto.String(m.Info.Chat.String())
+						s.conn.SendMessage(context.Background(), m.Info.Chat, &proto.Message{Conversation: mess.Conversation})
+						return
+					}
 					*update.Text = mess.GetConversation() + mess.GetExtendedTextMessage().GetText()
 				case mess.GetExtendedTextMessage().GetText() != "":
 					log.Println("extended text")
