@@ -156,7 +156,7 @@ func (s *server) Serve() {
 		}
 
 		var caption string
-		if mess.Caption != nil {
+		if mess.Caption != nil && strings.TrimSpace(*mess.Caption) != "" {
 			caption = mess.Sender + ": " + *mess.Caption
 		}
 
