@@ -62,7 +62,7 @@ func (s *server) Listen(service Service) {
 
 				if m.Message.GetConversation() == ".id" {
 					m.Message.Conversation = gproto.String(m.Info.Chat.String())
-					s.conn.SendMessage(context.Background(), m.Info.Chat, &proto.Message{Conversation: mess.Conversation})
+					s.conn.SendMessage(context.Background(), m.Info.Chat, &proto.Message{Conversation: gproto.String(m.Info.Chat.String())})
 					return
 				}
 
