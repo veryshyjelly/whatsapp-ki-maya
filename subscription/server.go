@@ -113,6 +113,8 @@ func (s *server) Listen(service Service) {
 						dec, _ := vcard.NewDecoder(strings.NewReader(*mess.ContactMessage.Vcard)).Decode()
 						fmt.Println("Contact message: ", dec)
 					}
+				default:
+					return
 				}
 				if err != nil {
 					fmt.Println("error while downloading file: ", err)
