@@ -122,7 +122,7 @@ func (s *server) Listen(service Service) {
 					return
 				}
 
-				if mess.ExtendedTextMessage.ContextInfo.QuotedMessage != nil {
+				if mess.ExtendedTextMessage != nil && mess.ExtendedTextMessage.ContextInfo != nil && mess.ExtendedTextMessage.ContextInfo.QuotedMessage != nil {
 					update.QuotedText = gproto.String(mess.ExtendedTextMessage.ContextInfo.QuotedMessage.GetConversation())
 				}
 
