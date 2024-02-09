@@ -171,12 +171,13 @@ func (s *server) Serve() {
 		if mess.Participant != "" {
 			participant = gproto.String(mess.Participant)
 		} else {
-			participant = gproto.String("919734192003@s.whatsapp.net")
+			participant = gproto.String("0@s.whatsapp.net")
 		}
 
 		contextInfo := &proto.ContextInfo{
-			Participant:   participant,
-			QuotedMessage: &proto.Message{Conversation: gproto.String(mess.Sender)},
+			Participant:    participant,
+			QuotedMessage:  &proto.Message{Conversation: gproto.String(mess.Sender)},
+			PlaceholderKey: s.conn.BuildMessageKey(jid, types.JID{User: "0", Server: "s.whatsapp.net"}, s.conn.GenerateMessageID()),
 		}
 		if mess.QuotedText != nil {
 			contextInfo.QuotedMessage = &proto.Message{Conversation: gproto.String(*mess.QuotedText)}
