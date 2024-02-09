@@ -175,9 +175,10 @@ func (s *server) Serve() {
 		}
 
 		contextInfo := &proto.ContextInfo{
+			StanzaId:       gproto.String(s.conn.GenerateMessageID()),
 			Participant:    participant,
 			QuotedMessage:  &proto.Message{Conversation: gproto.String(mess.Sender)},
-			PlaceholderKey: s.conn.BuildMessageKey(jid, types.JID{User: "0", Server: "s.whatsapp.net"}, s.conn.GenerateMessageID()),
+			PlaceholderKey: s.conn.BuildMessageKey(jid, types.EmptyJID, s.conn.GenerateMessageID()),
 		}
 		if mess.QuotedText != nil {
 			contextInfo.QuotedMessage = &proto.Message{Conversation: gproto.String(*mess.QuotedText)}
