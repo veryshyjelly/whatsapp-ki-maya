@@ -87,29 +87,47 @@ func (s *server) Listen(service Service) {
 				case mess.GetExtendedTextMessage().GetText() != "":
 					log.Println("extended text")
 					update.Text = new(string)
+					if mess.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage() != nil {
+						update.QuotedText = gproto.String(mess.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage().GetConversation())
+					}
 					*update.Text = mess.GetConversation() + mess.GetExtendedTextMessage().GetText()
 				case mess.ImageMessage != nil:
 					log.Println("image message")
+					if mess.GetImageMessage().GetContextInfo().GetQuotedMessage() != nil {
+						update.QuotedText = gproto.String(mess.GetImageMessage().GetContextInfo().GetQuotedMessage().GetConversation())
+					}
 					file, err = s.conn.Download(mess.ImageMessage)
 					update.Caption = mess.ImageMessage.Caption
 					update.Image = file
 				case mess.VideoMessage != nil:
 					log.Println("video message")
+					if mess.GetVideoMessage().GetContextInfo().GetQuotedMessage() != nil {
+						update.QuotedText = gproto.String(mess.GetVideoMessage().GetContextInfo().GetQuotedMessage().GetConversation())
+					}
 					file, err = s.conn.Download(mess.VideoMessage)
 					update.Caption = mess.VideoMessage.Caption
 					update.Video = file
 				case mess.DocumentMessage != nil:
 					log.Println("document message")
+					if mess.GetDocumentMessage().GetContextInfo().GetQuotedMessage() != nil {
+						update.QuotedText = gproto.String(mess.GetDocumentMessage().GetContextInfo().GetQuotedMessage().GetConversation())
+					}
 					file, err = s.conn.Download(mess.DocumentMessage)
 					update.Caption = mess.DocumentMessage.Caption
 					update.Filename = mess.DocumentMessage.FileName
 					update.Document = file
 				case mess.AudioMessage != nil:
 					log.Println("audio message")
+					if mess.GetAudioMessage().GetContextInfo().GetQuotedMessage() != nil {
+						update.QuotedText = gproto.String(mess.GetAudioMessage().GetContextInfo().GetQuotedMessage().GetConversation())
+					}
 					file, err = s.conn.Download(mess.AudioMessage)
 					update.Audio = file
 				case mess.StickerMessage != nil:
 					log.Println("sticker message")
+					if mess.GetStickerMessage().GetContextInfo().GetQuotedMessage() != nil {
+						update.QuotedText = gproto.String(mess.GetStickerMessage().GetContextInfo().GetQuotedMessage().GetConversation())
+					}
 					file, err = s.conn.Download(mess.StickerMessage)
 					update.Sticker = file
 				case mess.ContactMessage != nil:
@@ -120,10 +138,6 @@ func (s *server) Listen(service Service) {
 					}
 				default:
 					return
-				}
-
-				if mess.ExtendedTextMessage != nil && mess.ExtendedTextMessage.ContextInfo != nil && mess.ExtendedTextMessage.ContextInfo.QuotedMessage != nil {
-					update.QuotedText = gproto.String(mess.ExtendedTextMessage.ContextInfo.QuotedMessage.GetConversation())
 				}
 
 				if err != nil {
