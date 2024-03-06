@@ -171,7 +171,7 @@ func (s *server) Serve() {
 		if mess.Participant != "" {
 			participant = gproto.String(mess.Participant)
 		} else {
-			participant = gproto.String("0@s.whatsapp.net")
+			participant = gproto.String("918448286574@s.whatsapp.net")
 		}
 
 		contextInfo := &proto.ContextInfo{
