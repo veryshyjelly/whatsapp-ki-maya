@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/emersion/go-vcard"
 	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -63,7 +62,7 @@ func (s *server) Listen(service Service) {
 
 				if m.Message.GetConversation() == ".id" {
 					m.Message.Conversation = gproto.String(m.Info.Chat.String())
-					s.conn.SendMessage(context.Background(), m.Info.Chat, &proto.Message{Conversation: gproto.String(m.Info.Chat.String())})
+					s.conn.SendMessage(context.Background(), m.Info.Chat, &waE2E.Message{Conversation: gproto.String(m.Info.Chat.String())})
 					return
 				}
 
@@ -162,7 +161,7 @@ func (s *server) Serve() {
 			Server: us[1],
 		}
 
-		msg := new(proto.Message)
+		msg := new(waE2E.Message)
 
 		text := "*" + mess.Sender + "*: "
 		var resp whatsmeow.UploadResponse
@@ -178,11 +177,11 @@ func (s *server) Serve() {
 		contextInfo := &waE2E.ContextInfo{
 			StanzaID:       gproto.String(s.conn.GenerateMessageID()),
 			Participant:    participant,
-			QuotedMessage:  &proto.Message{Conversation: gproto.String(mess.Sender)},
+			QuotedMessage:  &waE2E.Message{Conversation: gproto.String(mess.Sender)},
 			PlaceholderKey: s.conn.BuildMessageKey(jid, types.EmptyJID, s.conn.GenerateMessageID()),
 		}
 		if mess.QuotedText != nil {
-			contextInfo.QuotedMessage = &proto.Message{Conversation: gproto.String(*mess.QuotedText)}
+			contextInfo.QuotedMessage = &waE2E.Message{Conversation: gproto.String(*mess.QuotedText)}
 		} else if mess.Sticker == nil {
 			contextInfo = nil
 		}
@@ -197,7 +196,7 @@ func (s *server) Serve() {
 		case mess.Text != nil:
 			text += *mess.Text
 			if mess.QuotedText != nil {
-				msg.ExtendedTextMessage = &proto.ExtendedTextMessage{
+				msg.ExtendedTextMessage = &waE2E.ExtendedTextMessage{
 					Text:        gproto.String(text),
 					ContextInfo: contextInfo,
 				}
