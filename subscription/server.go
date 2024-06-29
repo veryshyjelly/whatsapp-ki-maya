@@ -6,6 +6,7 @@ import (
 	"github.com/emersion/go-vcard"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	gproto "google.golang.org/protobuf/proto"
@@ -174,8 +175,8 @@ func (s *server) Serve() {
 			participant = gproto.String("918448286574@s.whatsapp.net")
 		}
 
-		contextInfo := &proto.ContextInfo{
-			StanzaId:       gproto.String(s.conn.GenerateMessageID()),
+		contextInfo := &waE2E.ContextInfo{
+			StanzaID:       gproto.String(s.conn.GenerateMessageID()),
 			Participant:    participant,
 			QuotedMessage:  &proto.Message{Conversation: gproto.String(mess.Sender)},
 			PlaceholderKey: s.conn.BuildMessageKey(jid, types.EmptyJID, s.conn.GenerateMessageID()),
@@ -209,46 +210,46 @@ func (s *server) Serve() {
 			if caption == "" {
 				caption = mess.Sender + " sent an image"
 			}
-			msg.ImageMessage = &proto.ImageMessage{
-				Url:                 &resp.URL,
+			msg.ImageMessage = &waE2E.ImageMessage{
+				URL:                 &resp.URL,
 				Mimetype:            gproto.String(http.DetectContentType(mess.Image)),
 				Caption:             gproto.String(caption),
-				FileSha256:          resp.FileSHA256,
+				FileSHA256:          resp.FileSHA256,
 				FileLength:          &resp.FileLength,
 				MediaKey:            resp.MediaKey,
-				FileEncSha256:       resp.FileEncSHA256,
+				FileEncSHA256:       resp.FileEncSHA256,
 				DirectPath:          &resp.DirectPath,
 				ContextInfo:         contextInfo,
-				JpegThumbnail:       mess.Image,
+				JPEGThumbnail:       mess.Image,
 				ThumbnailDirectPath: &resp.DirectPath,
-				ThumbnailEncSha256:  resp.FileEncSHA256,
-				ThumbnailSha256:     resp.FileEncSHA256,
+				ThumbnailEncSHA256:  resp.FileEncSHA256,
+				ThumbnailSHA256:     resp.FileEncSHA256,
 			}
 		case mess.Video != nil && len(mess.Video) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Image, whatsmeow.MediaVideo)
 			if caption == "" {
 				caption = mess.Sender + " sent a video"
 			}
-			msg.VideoMessage = &proto.VideoMessage{
-				Url:           &resp.URL,
+			msg.VideoMessage = &waE2E.VideoMessage{
+				URL:           &resp.URL,
 				Mimetype:      gproto.String(http.DetectContentType(mess.Video)),
 				Caption:       gproto.String(caption),
-				FileSha256:    resp.FileSHA256,
+				FileSHA256:    resp.FileSHA256,
 				FileLength:    &resp.FileLength,
 				MediaKey:      resp.MediaKey,
-				FileEncSha256: resp.FileEncSHA256,
+				FileEncSHA256: resp.FileEncSHA256,
 				DirectPath:    &resp.DirectPath,
 				ContextInfo:   contextInfo,
 			}
 		case mess.Audio != nil && len(mess.Audio) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Audio, whatsmeow.MediaAudio)
-			msg.AudioMessage = &proto.AudioMessage{
-				Url:           &resp.URL,
+			msg.AudioMessage = &waE2E.AudioMessage{
+				URL:           &resp.URL,
 				Mimetype:      gproto.String(http.DetectContentType(mess.Audio)),
-				FileSha256:    resp.FileSHA256,
+				FileSHA256:    resp.FileSHA256,
 				FileLength:    &resp.FileLength,
 				MediaKey:      resp.MediaKey,
-				FileEncSha256: resp.FileEncSHA256,
+				FileEncSHA256: resp.FileEncSHA256,
 				DirectPath:    &resp.DirectPath,
 				ContextInfo:   contextInfo,
 			}
@@ -257,27 +258,27 @@ func (s *server) Serve() {
 			if caption == "" {
 				caption = mess.Sender + " sent a document"
 			}
-			msg.DocumentMessage = &proto.DocumentMessage{
-				Url:           &resp.URL,
+			msg.DocumentMessage = &waE2E.DocumentMessage{
+				URL:           &resp.URL,
 				Mimetype:      gproto.String(http.DetectContentType(mess.Document)),
 				Title:         gproto.String("Document"),
 				Caption:       gproto.String(caption),
-				FileSha256:    resp.FileSHA256,
+				FileSHA256:    resp.FileSHA256,
 				FileLength:    &resp.FileLength,
 				MediaKey:      resp.MediaKey,
-				FileEncSha256: resp.FileEncSHA256,
+				FileEncSHA256: resp.FileEncSHA256,
 				DirectPath:    &resp.DirectPath,
 				ContextInfo:   contextInfo,
 			}
 		case mess.Sticker != nil && len(mess.Sticker) > 0:
 			resp, err = s.conn.Upload(context.Background(), mess.Sticker, whatsmeow.MediaImage)
-			msg.StickerMessage = &proto.StickerMessage{
-				Url:           &resp.URL,
+			msg.StickerMessage = &waE2E.StickerMessage{
+				URL:           &resp.URL,
 				Mimetype:      gproto.String(http.DetectContentType(mess.Sticker)),
-				FileSha256:    resp.FileSHA256,
+				FileSHA256:    resp.FileSHA256,
 				FileLength:    &resp.FileLength,
 				MediaKey:      resp.MediaKey,
-				FileEncSha256: resp.FileEncSHA256,
+				FileEncSHA256: resp.FileEncSHA256,
 				DirectPath:    &resp.DirectPath,
 				ContextInfo:   contextInfo,
 			}
